@@ -3,63 +3,75 @@ import numpy as np
 from keras.layers import Dense
 import matplotlib.pyplot as plt
 
-# --- Параметри ---
-task = "XOR"  # або: "AND_Y_AND_Z", "OR_Y_OR_Z", "X_OR_Y_AND_Z", "X_AND_Y_AND_Z"
-hidden_neurons = 4
+# === Параметри моделі ===
 learning_rate = 0.1
-nEpochs = 500
+nEpochs = 20
+hidden_neurons = 2
 
-# --- Вхідні дані ---
-if task == "XOR":
-    features = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
-    labels = np.array([[0, 1], [1, 0], [1, 0], [0, 1]])
+# === Дані (логічна функція x or y or z) ===
+features = np.array([
+    [0, 0, 0],
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [1, 1, 0],
+    [1, 0, 1],
+    [1, 1, 1],
+    [0, 1, 1]
+])
 
-elif task == "X_AND_Y_AND_Z":
-    features = np.array([[0, 0, 0],
-                         [1, 0, 0],
-                         [1, 1, 1],
-                         [1, 1, 0],
-                         [0, 1, 1],
-                         [0, 0, 1]])
-    labels = np.array([[1, 0], [1, 0], [0, 1], [1, 0], [1, 0], [1, 0]])
+labels = np.array([
+    [0, 1],  # 0 or 0 or 0 = 0 (False)
+    [1, 0],  # 1 or 0 or 0 = 1
+    [1, 0],  # ...
+    [1, 0],
+    [1, 0],
+    [1, 0],
+    [1, 0],
+    [1, 0]
+])
 
-# --- Побудова моделі ---
-initializer = keras.initializers.GlorotNormal(seed=42)
+# === Побудова моделі ===
+initializer = keras.initializers.GlorotNormal(seed=12)
 model = keras.Sequential([
-    Dense(units=hidden_neurons, input_shape=(features.shape[1],), kernel_initializer=initializer, activation='sigmoid'),
+    Dense(units=hidden_neurons, input_shape=(3,), kernel_initializer=initializer, activation='sigmoid'),
     Dense(units=2, kernel_initializer=initializer, activation='softmax')
 ])
-model.compile(loss='categorical_crossentropy',
-              optimizer=keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9, nesterov=True))
+model.compile(
+    loss='categorical_crossentropy',
+    optimizer=keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.95, nesterov=True)
+)
 
-# --- Навчання ---
-print(f"\n--- Навчання моделі для задачі: {task} ---")
-history = model.fit(features, labels, epochs=nEpochs, batch_size=1, verbose=0)
-print("Навчання завершено.")
+# === Навчання ===
+print('\n--- Навчання моделі ---')
+history = model.fit(features, labels, epochs=nEpochs, batch_size=1, verbose=1)
+print('Навчання завершено.\n')
 
-# --- Оцінка ---
-print("\nОцінка точності:")
+# === Оцінювання ===
+print('--- Оцінювання ---')
 loss = model.evaluate(features, labels, verbose=0)
-print(f"Loss: {loss:.4f}")
+print(f"Loss: {loss:.4f}\n")
 
-# --- Прогнозування ---
-print("\nПередбачення:")
+# === Прогнозування на всіх прикладах ===
+print('--- Результати передбачення ---')
 predictions = model.predict(features)
-for i, p in enumerate(predictions):
-    logic_input = features[i]
-    result = np.argmax(p)
-    print(f"{logic_input} -> {result} ({'True' if result == 1 else 'False'})")
+for i, pred in enumerate(predictions):
+    input_vals = features[i]
+    output = np.argmax(pred)
+    logic_result = "True" if output == 0 else "False"
+    print(f"{input_vals} => {logic_result} (вихід: {pred})")
 
-# --- Виведення конкретного випадку (XOR приклад) ---
-if task == "XOR":
-    print("\nРезультат для true XOR false:")
-    res = model.predict(np.array([[1, 0]]))
-    print(f"[1, 0] -> {np.argmax(res)} ({'True' if np.argmax(res) == 1 else 'False'})")
+# === Тестовий запит ===
+print('\n--- Тест на [0, 0, 0] ---')
+test = np.array([[0, 0, 0]])
+test_pred = model.predict(test)
+predicted_class = np.argmax(test_pred)
+print(f"[0, 0, 0] => {'True' if predicted_class == 0 else 'False'} (вихід: {test_pred})")
 
-# --- Побудова графіку втрат ---
+# === Побудова графіку втрат ===
 plt.plot(history.history['loss'])
-plt.title("Графік втрат (Loss)")
-plt.xlabel("Епохи")
+plt.title("Зміна функції втрат (loss) під час навчання")
+plt.xlabel("Епоха")
 plt.ylabel("Loss")
 plt.grid(True)
 plt.show()
