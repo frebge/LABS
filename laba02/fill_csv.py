@@ -1,7 +1,7 @@
 import random
 
 def generate_csv(file_name, class_size, total_classes=3):
-    print(f"[✔] Створення файлу: {file_name}")
+    print(f"Створення файлу: {file_name}")
     records = []
 
     sq1_size = 5
