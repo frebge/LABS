@@ -40,7 +40,7 @@ if __name__ == '__main__':
     print(" Навчання завершено!")
 
     # Оцінювання
-    print("\n📊 Результат оцінювання:")
+    print("\n Результат оцінювання:")
     classifier.evaluate(X_test, Y_test)
 
     # Збереження моделі
